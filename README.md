@@ -48,7 +48,7 @@ npm run build
 1. Chromeで`chrome://extensions/`にアクセス
 2. 「デベロッパーモード」を有効化
 3. 「パッケージ化されていない拡張機能を読み込む」をクリック
-4. `build/chrome-mv3-dev`フォルダを選択
+4. `build/chrome-mv3-prod`フォルダを選択
 
 ## 📖 使用方法
 
@@ -90,6 +90,35 @@ npm run build
 ```bash
 npm run package
 ```
+
+## 🔧 カスタマイズ
+
+### モデルの変更
+Gemini AIのモデルを変更したい場合は、`background.ts`の71行目を編集してください：
+
+```typescript
+// ② 使用するモデルを指定
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+```
+
+**利用可能モデル例**:
+- `gemini-1.5-flash`: 高速・軽量（推奨）
+- `gemini-1.5-pro`: 高精度・多機能
+- `gemini-1.0-pro`: 標準的な性能
+
+### プロンプトの変更
+要約の指示を変更したい場合は、`background.ts`の76行目を編集してください：
+
+```typescript
+const prompt = `以下のテキストを簡潔に要約してください。\n\n${text}`
+```
+
+**カスタマイズ例**:
+- 要約の長さを指定: `「3行で要約してください」`
+- 特定の観点で要約: `「技術的な観点で要約してください」`
+- 言語を指定: `「英語で要約してください」`
+
+**注意**: 変更後は必ず`npm run build`で再ビルドしてください。
 
 ## ⚠️ 注意事項
 
