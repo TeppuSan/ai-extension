@@ -128,9 +128,25 @@ function ContentScript() {
 }
 
 // DOMにマウント
-const container = document.createElement("div")
-container.id = "ai-extension-content"
-document.body.appendChild(container)
+function initializeContentScript() {
+  // 既存のコンテナがあれば削除
+  const existingContainer = document.getElementById("ai-extension-content")
+  if (existingContainer) {
+    existingContainer.remove()
+  }
 
-const root = createRoot(container)
-root.render(<ContentScript />)
+  const container = document.createElement("div")
+  container.id = "ai-extension-content"
+  document.body.appendChild(container)
+
+  // React 18の正しい構文でルートを作成
+  const root = createRoot(container)
+  root.render(<ContentScript />)
+}
+
+// DOMの準備が完了してから初期化
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializeContentScript)
+} else {
+  initializeContentScript()
+}
