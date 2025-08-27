@@ -68,7 +68,7 @@ async function summarizeText(text: string, tab: chrome.tabs.Tab) {
   // ① GoogleGenerativeAIクラスのインスタンスを作成
   const genAI = new GoogleGenerativeAI(API_KEY)
   // ② 使用するモデルを指定
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" })
 
   try {
     console.log("Gemini APIにリクエストを送信中...")
