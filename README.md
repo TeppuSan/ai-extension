@@ -98,13 +98,17 @@ Gemini AIのモデルを変更したい場合は、`background.ts`の71行目を
 
 ```typescript
 // ② 使用するモデルを指定
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" })
 ```
 
 **利用可能モデル例**:
-- `gemini-1.5-flash`: 高速・軽量（推奨）
-- `gemini-1.5-pro`: 高精度・多機能
-- `gemini-1.0-pro`: 標準的な性能
+- `gemini-2.5-flash-lite`: 高速・軽量（推奨）
+- `gemini-2.5-flash`: 高精度・多機能
+- `gemini-2.5-pro`: 最高性能・思考機能
+
+**詳細情報**:
+ モデル変更の際は[Google AI Gemini モデル](https://ai.google.dev/gemini-api/docs/models?hl=ja)を参照してください。
+ レート制限の詳細は[Google AI Gemini API レート制限](https://ai.google.dev/gemini-api/docs/rate-limits?hl=ja)をご確認ください。
 
 ### プロンプトの変更
 要約の指示を変更したい場合は、`background.ts`の76行目を編集してください：
