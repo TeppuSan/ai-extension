@@ -1,5 +1,5 @@
 // background.ts (バックグラウンドでGemini APIと連携)
-import { GoogleGenerativeAI } from "@google/generative-ai"
+import { GoogleGenAI } from "@google/genai"
 
 // コンテキストメニューに項目を追加します
 chrome.runtime.onInstalled.addListener(() => {
@@ -33,6 +33,7 @@ chrome.runtime.onInstalled.addListener(() => {
 // コンテキストメニューがクリックされたときのイベントリスナー
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   console.log("コンテキストメニューがクリックされました:", info.menuItemId)
+  console.log("選択されたテキスト:", info.selectionText)
 
   if (info.menuItemId === "summarizeText" && info.selectionText) {
     console.log(
@@ -48,27 +49,25 @@ chrome.runtime.onStartup.addListener(() => {
   console.log("拡張機能が起動しました")
 })
 
-// メッセージ受信リスナー（デバッグ用）
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log("メッセージを受信しました:", message)
-  sendResponse({ status: "received" })
-})
+// メッセージ受信リスナー（デバッグ用）現在は実行されない
+// chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+//   console.log("メッセージを受信しました:", message)
+//   sendResponse({ status: "received" })
+// })
 
 async function summarizeText(text: string, tab: chrome.tabs.Tab) {
   console.log("テキスト要約を開始します")
-
+  // console.log("tab:", tab)
   const API_KEY = process.env.PLASMO_PUBLIC_GEMINI_API_KEY
   console.log("APIキーの状況:", API_KEY ? "設定済み" : "未設定")
-
+  // APIキーが設定されていない場合はエラーを返す
   if (!API_KEY) {
     console.error("APIキーが設定されていません。")
     return
   }
 
   // ① GoogleGenerativeAIクラスのインスタンスを作成
-  const genAI = new GoogleGenerativeAI(API_KEY)
-  // ② 使用するモデルを指定
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" })
+  const ai = new GoogleGenAI({ apiKey: API_KEY })
 
   try {
     console.log("Gemini APIにリクエストを送信中...")
@@ -76,9 +75,11 @@ async function summarizeText(text: string, tab: chrome.tabs.Tab) {
     const prompt = `以下のテキストを簡潔に要約してください。\n\n${text}`
 
     // ③ モデルにプロンプトを送信し、応答を取得
-    const result = await model.generateContent(prompt)
-    const response = await result.response
-    const summary = response.text()
+    const result = await ai.models.generateContent({
+      model: "gemini-2.5-flash-lite",
+      contents: [prompt]
+    })
+    const summary = result.text
 
     console.log("要約完了:", summary)
     console.log("=== 要約結果 ===")

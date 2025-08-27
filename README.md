@@ -94,11 +94,13 @@ npm run package
 ## 🔧 カスタマイズ
 
 ### モデルの変更
-Gemini AIのモデルを変更したい場合は、`background.ts`の71行目を編集してください：
+Gemini AIのモデルを変更したい場合は、`background.ts`の79行目を編集してください：
 
 ```typescript
-// ② 使用するモデルを指定
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" })
+78    const result = await ai.models.generateContent({
+79      model: "gemini-2.5-flash-lite",
+80      contents: [prompt]
+81    })
 ```
 
 **利用可能モデル例**:
@@ -111,7 +113,7 @@ const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" })
  レート制限の詳細は[Google AI Gemini API レート制限](https://ai.google.dev/gemini-api/docs/rate-limits?hl=ja)をご確認ください。
 
 ### プロンプトの変更
-要約の指示を変更したい場合は、`background.ts`の76行目を編集してください：
+要約の指示を変更したい場合は、`background.ts`の75行目を編集してください：
 
 ```typescript
 const prompt = `以下のテキストを簡潔に要約してください。\n\n${text}`
