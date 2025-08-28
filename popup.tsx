@@ -1,178 +1,156 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 function IndexPopup() {
-  return (
-    <div
-      style={{
-        width: "400px",
-        padding: "20px",
-        fontFamily: "Arial, sans-serif",
-        backgroundColor: "#f8f9fa"
-      }}>
-      {/* ヘッダー */}
-      <div style={{ textAlign: "center", marginBottom: "20px" }}>
-        <h1
-          style={{
-            color: "#007AFF",
-            fontSize: "24px",
-            margin: "0 0 10px 0"
-          }}>
-          🤖 AI Extension
-        </h1>
-        <p
-          style={{
-            color: "#666",
-            fontSize: "14px",
-            margin: "0"
-          }}>
-          Gemini AIによるテキスト要約
-        </p>
-      </div>
+  const [apiKey, setApiKey] = useState("") //初期常態は空文字
+  const [isSaved, setIsSaved] = useState(false) //初期常態はfalse
+  const [showSettings, setShowSettings] = useState(false) //初期常態はfalse
 
-      {/* 使い方の手順 */}
-      <div
-        style={{
-          backgroundColor: "white",
-          padding: "20px",
-          borderRadius: "8px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
-        }}>
-        <h2
-          style={{
-            color: "#333",
-            fontSize: "18px",
-            margin: "0 0 15px 0"
-          }}>
-          📖 使い方
-        </h2>
+  useEffect(() => {
+    // 保存済みのAPIキーを読み込み
+    chrome.storage.local.get(["userApiKey"], (result) => {
+      if (result.userApiKey) {
+        setApiKey(result.userApiKey)
+      }
+    })
+  }, [])
+
+  const saveApiKey = () => {
+    chrome.storage.local.set({ userApiKey: apiKey }, () => {
+      setIsSaved(true)
+
+      setTimeout(() => setIsSaved(false), 2000)
+    })
+  }
+
+  if (showSettings) {
+    return (
+      <div style={{ width: "400px", padding: "20px" }}>
+        <h2>🔧 APIキー設定</h2>
 
         <div style={{ marginBottom: "15px" }}>
-          <div
+          <label
             style={{
-              display: "flex",
-              alignItems: "center",
-              marginBottom: "10px"
+              display: "block",
+              marginBottom: "5px",
+              fontWeight: "bold"
             }}>
-            <span
-              style={{
-                backgroundColor: "#007AFF",
-                color: "white",
-                borderRadius: "50%",
-                width: "24px",
-                height: "24px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "12px",
-                marginRight: "10px"
-              }}>
-              1
-            </span>
-            <span style={{ fontSize: "14px", color: "#333" }}>
-              要約したいテキストを選択
-            </span>
-          </div>
+            Gemini APIキー:
+          </label>
+          <input
+            type="password"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder="APIキーを入力"
+            style={{
+              width: "100%",
+              padding: "8px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              fontSize: "14px"
+            }}
+          />
+        </div>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginBottom: "10px"
-            }}>
-            <span
-              style={{
-                backgroundColor: "#007AFF",
-                color: "white",
-                borderRadius: "50%",
-                width: "24px",
-                height: "24px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "12px",
-                marginRight: "10px"
-              }}>
-              2
-            </span>
-            <span style={{ fontSize: "14px", color: "#333" }}>
-              右クリックして「Geminiでテキストを要約する」をクリック
-            </span>
-          </div>
+        <button
+          onClick={saveApiKey}
+          style={{
+            backgroundColor: "#007AFF",
+            color: "white",
+            padding: "8px 16px",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            marginRight: "10px",
+            fontSize: "14px"
+          }}>
+          保存
+        </button>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center"
-            }}>
-            <span
-              style={{
-                backgroundColor: "#007AFF",
-                color: "white",
-                borderRadius: "50%",
-                width: "24px",
-                height: "24px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "12px",
-                marginRight: "10px"
-              }}>
-              3
-            </span>
-            <span style={{ fontSize: "14px", color: "#333" }}>
-              ページ内に要約結果が表示されます
-            </span>
-          </div>
+        <button
+          onClick={() => setShowSettings(false)}
+          style={{
+            backgroundColor: "#666",
+            color: "white",
+            padding: "8px 16px",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            fontSize: "14px"
+          }}>
+          戻る
+        </button>
+
+        {isSaved && (
+          <p style={{ color: "green", marginTop: "10px", fontSize: "14px" }}>
+            ✅ APIキーが保存されました
+          </p>
+        )}
+
+        <div style={{ marginTop: "20px", fontSize: "12px", color: "#666" }}>
+          <h4>💡 設定手順:</h4>
+          <ol style={{ marginLeft: "20px" }}>
+            <li>
+              <a href="https://aistudio.google.com/" target="_blank">
+                Google AI Studio
+              </a>
+              でAPIキーを取得
+            </li>
+            <li>上記の入力欄にAPIキーを入力</li>
+            <li>保存ボタンをクリック</li>
+            <li>戻るボタンでメイン画面に戻る</li>
+          </ol>
         </div>
       </div>
+    )
+  }
 
-      {/* 注意事項 */}
-      <div
-        style={{
-          backgroundColor: "#fff3cd",
-          border: "1px solid #ffeaa7",
-          borderRadius: "8px",
-          padding: "15px",
-          marginTop: "20px"
-        }}>
-        <h3
-          style={{
-            color: "#856404",
-            fontSize: "14px",
-            margin: "0 0 8px 0"
-          }}>
-          ⚠️ 注意事項
-        </h3>
-        <p
-          style={{
-            color: "#856404",
-            fontSize: "12px",
-            margin: "0",
-            lineHeight: "1.4"
-          }}>
-          • Gemini APIキーが設定されている必要があります
-          <br />
-          • インターネット接続が必要です
-          <br />• 長いテキストは処理に時間がかかる場合があります
+  return (
+    <div style={{ width: "400px", padding: "20px" }}>
+      <h2>🤖 AI Extension</h2>
+
+      <div style={{ marginBottom: "20px" }}>
+        <p>
+          📝 <strong>使用方法:</strong>
         </p>
+        <ol style={{ marginLeft: "20px" }}>
+          <li>ウェブページでテキストを選択</li>
+          <li>右クリック → 「Geminiでテキストを要約する」</li>
+          <li>要約結果がページ内に表示されます</li>
+        </ol>
       </div>
 
-      {/* フッター */}
-      <div
-        style={{
-          textAlign: "center",
-          marginTop: "20px",
-          paddingTop: "15px",
-          borderTop: "1px solid #eee"
-        }}>
-        <p
-          style={{
-            color: "#999",
-            fontSize: "11px",
-            margin: "0"
-          }}>
-          AI Extension v0.0.1
+      <div style={{ marginBottom: "20px" }}>
+        <p>
+          ⚠️ <strong>注意:</strong>
         </p>
+        <ul style={{ marginLeft: "20px" }}>
+          <li>初回使用前にAPIキーの設定が必要です</li>
+          <li>
+            <a href="https://aistudio.google.com/" target="_blank">
+              Google AI Studio
+            </a>
+            でAPIキーを取得してください
+          </li>
+        </ul>
+      </div>
+
+      <button
+        onClick={() => setShowSettings(true)}
+        style={{
+          backgroundColor: "#007AFF",
+          color: "white",
+          padding: "10px 20px",
+          border: "none",
+          borderRadius: "8px",
+          cursor: "pointer",
+          width: "100%",
+          fontSize: "14px"
+        }}>
+        🔧 APIキー設定
+      </button>
+
+      <div style={{ marginTop: "20px", fontSize: "12px", color: "#666" }}>
+        <p>✅ 設定が完了すれば、すぐに使用できます！</p>
       </div>
     </div>
   )

@@ -57,24 +57,36 @@ chrome.runtime.onStartup.addListener(() => {
 
 async function summarizeText(text: string, tab: chrome.tabs.Tab) {
   console.log("テキスト要約を開始します")
-  // console.log("tab:", tab)
-  const API_KEY = process.env.PLASMO_PUBLIC_GEMINI_API_KEY
-  console.log("APIキーの状況:", API_KEY ? "設定済み" : "未設定")
-  // APIキーが設定されていない場合はエラーを返す
-  if (!API_KEY) {
-    console.error("APIキーが設定されていません。")
+
+  // 保存済みのAPIキーを取得
+  const { userApiKey } = await chrome.storage.local.get(["userApiKey"])
+
+  if (!userApiKey) {
+    // APIキーが設定されていない場合
+    if (tab && tab.id) {
+      try {
+        await chrome.tabs.sendMessage(tab.id, {
+          type: "API_KEY_MISSING",
+          message:
+            "APIキーが設定されていません。拡張機能の設定でAPIキーを入力してください。"
+        })
+      } catch (error) {
+        console.log("content.tsxへのメッセージ送信に失敗しました")
+      }
+    }
     return
   }
 
-  // ① GoogleGenerativeAIクラスのインスタンスを作成
-  const ai = new GoogleGenAI({ apiKey: API_KEY })
+  console.log("APIキーの状況: 設定済み")
+
+  // 保存済みのAPIキーでGemini APIを呼び出し
+  const ai = new GoogleGenAI({ apiKey: userApiKey })
 
   try {
     console.log("Gemini APIにリクエストを送信中...")
 
     const prompt = `以下のテキストを簡潔に要約してください。\n\n${text}`
 
-    // ③ モデルにプロンプトを送信し、応答を取得
     const result = await ai.models.generateContent({
       model: "gemini-2.5-flash-lite",
       contents: [prompt]
@@ -86,7 +98,24 @@ async function summarizeText(text: string, tab: chrome.tabs.Tab) {
     console.log(summary)
     console.log("================")
 
-    // ④ content.tsxに要約結果を送信
+    // 要約結果の検証
+    if (!summary || summary.trim() === "") {
+      // 要約結果が空の場合
+      if (tab && tab.id) {
+        try {
+          await chrome.tabs.sendMessage(tab.id, {
+            type: "SUMMARY_EMPTY",
+            message:
+              "要約結果が取得できませんでした。テキストの内容を確認してください。"
+          })
+        } catch (error) {
+          console.log("content.tsxへのメッセージ送信に失敗しました")
+        }
+      }
+      return
+    }
+
+    // content.tsxに要約結果を送信
     if (tab && tab.id) {
       try {
         await chrome.tabs.sendMessage(tab.id, {
@@ -105,5 +134,35 @@ async function summarizeText(text: string, tab: chrome.tabs.Tab) {
     }
   } catch (error) {
     console.error("Gemini APIでのエラーですわ:", error)
+
+    // APIキーが間違っている場合のエラーハンドリング
+    let errorMessage = "Gemini APIでエラーが発生しました。"
+    let messageType = "SUMMARY_EMPTY"
+
+    if (error.message && error.message.includes("API_KEY_INVALID")) {
+      errorMessage = "APIキーが無効です。正しいAPIキーを設定してください。"
+      messageType = "SUMMARY_EMPTY"
+    } else if (error.message && error.message.includes("quota")) {
+      errorMessage =
+        "APIの利用制限に達しました。しばらく時間をおいてから再試行してください。"
+      messageType = "SUMMARY_EMPTY"
+    } else if (error.message && error.message.includes("network")) {
+      errorMessage =
+        "ネットワークエラーが発生しました。インターネット接続を確認してください。"
+      messageType = "SUMMARY_EMPTY"
+    }
+
+    // content.tsxにエラーメッセージを送信
+    if (tab && tab.id) {
+      try {
+        await chrome.tabs.sendMessage(tab.id, {
+          type: messageType,
+          message: errorMessage
+        })
+        console.log("content.tsxにエラーメッセージを送信しました")
+      } catch (sendError) {
+        console.log("content.tsxへのエラーメッセージ送信に失敗しました")
+      }
+    }
   }
 }
