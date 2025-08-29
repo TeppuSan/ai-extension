@@ -106,7 +106,7 @@ function IndexPopup() {
 
   return (
     <div style={{ width: "400px", padding: "20px" }}>
-      <h2>🤖 AI Extension</h2>
+      <h2>🤖 サクッとAI要約</h2>
 
       <div style={{ marginBottom: "20px" }}>
         <p>

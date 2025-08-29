@@ -1,8 +1,8 @@
 {
-  "name": "ai-extension",
-  "displayName": "Ai extension",
+  "name": "サクッとAI要約",
+  "displayName": "サクッとAI要約",
   "version": "0.0.1",
-  "description": "Gemini APIを使用したAI拡張機能",
+  "description": "APIキーを入力することで、文章を選択し右クリックで簡単にAIが要約します。",
   "author": "Teppu",
   "scripts": {
     "dev": "plasmo dev",
@@ -26,7 +26,7 @@
   },
   "manifest": {
     "host_permissions": [
-      "https://*/*"
+      "https://generativelanguage.googleapis.com/*"
     ],
     "permissions": [
       "contextMenus",

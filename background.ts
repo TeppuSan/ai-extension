@@ -133,7 +133,7 @@ async function summarizeText(text: string, tab: chrome.tabs.Tab) {
       }
     }
   } catch (error) {
-    console.error("Gemini APIでのエラーですわ:", error)
+    console.error("Gemini APIでのエラーです:", error)
 
     // APIキーが間違っている場合のエラーハンドリング
     let errorMessage = "Gemini APIでエラーが発生しました。"
