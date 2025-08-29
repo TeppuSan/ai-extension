@@ -161,20 +161,6 @@ npm run build
 - **GitHub**: [@TeppuSan](https://github.com/TeppuSan)
 - **連絡先**: [starvampire.teppu@gmail.com](mailto:starvampire.teppu@gmail.com)
 
-## 🙏 謝辞
-
-- [Plasmo](https://www.plasmo.com/) - 素晴らしいChrome拡張機能フレームワーク
-- [Google Gemini](https://ai.google.dev/gemini-api/) - 高精度なAI要約技術
-- [Chrome Web Store](https://chrome.google.com/webstore/) - 拡張機能の配布プラットフォーム
-
-## 📈 今後の予定
-
-- [ ] 多言語対応の強化
-- [ ] 要約のカスタマイズ機能
-- [ ] 履歴機能の追加
-- [ ] モバイル対応
-- [ ] オフライン対応
-
 ## ⚠️ 注意事項
 
 - **APIキーの管理**: 個人のAPIキーを適切に管理してください
