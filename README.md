@@ -1,187 +1,189 @@
-# AI Extension - Gemini AIによるテキスト要約
+# サクッとAI要約 - Chrome拡張機能
 
-Chrome拡張機能で、選択したテキストをGemini AIを使って要約できる拡張機能です。
+[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-サクッとAI要約-blue?logo=google-chrome)](https://chrome.google.com/webstore/detail/sakutto-ai-summary)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Plasmo](https://img.shields.io/badge/Plasmo-0.90.5-purple.svg)](https://www.plasmo.com/)
+
+> 選択したテキストを右クリックするだけ！Google Gemini AIが瞬時に要約し、長文もわかりやすく整理します。
 
 ## 🚀 機能
 
-- **右クリック要約**: テキスト選択後に右クリックで要約実行
-- **美しいUI**: ページ内に美しいポップアップで結果表示
-- **高速処理**: Gemini 1.5 Flashモデルによる高速要約
-- **シンプル操作**: 3ステップで簡単要約
+- **⚡ ワンクリック要約**: テキスト選択 → 右クリック → 要約完了
+- **🤖 高精度AI**: Gemini 2.5 Flashによる文脈理解
+- **🔒 プライバシー重視**: APIキーはローカル保存、外部送信なし
+- **🎯 幅広い用途**: 学習、業務、研究、情報収集に対応
+- **✨ 美しいUI**: ページ内に美しいポップアップで結果表示
 
-## 📋 セットアップ手順
+## 📖 セットアップ
 
-### 1. リポジトリのクローン
+### 前提条件
+- Google Chrome ブラウザ
+- Gemini API キー（[Google AI Studio](https://aistudio.google.com/)で取得）
+
+### インストール方法
+#### 1.　公開前
+<!-- #### 1. Chrome Web Storeからインストール（推奨）
+1. [Chrome Web Store](https://chrome.google.com/webstore/detail/sakutto-ai-summary)にアクセス
+2. 「Chromeに追加」をクリック
+3. 拡張機能をインストール -->
+
+#### 2. 開発版としてインストール
 ```bash
-git clone [リポジトリURL]
+# リポジトリをクローン
+git clone https://github.com/TeppuSan/ai-extension.git
 cd ai-extension
-```
 
-### 2. 依存関係のインストール
-```bash
+# 依存関係をインストール
 npm install
-# または
-pnpm install
-```
 
-### 3. Gemini APIキーの取得
-1. [Google AI Studio](https://makersuite.google.com/app/apikey)にアクセス
-2. Googleアカウントでログイン
-3. 「Create API Key」をクリック
-4. APIキーをコピー
-
-### 4. 環境変数の設定
-プロジェクトルートに`.env`ファイルを作成し、以下の内容を記述：
-
-```env
-PLASMO_PUBLIC_GEMINI_API_KEY=あなたのGeminiAPIキーをここに入れてください
-```
-
-**重要**: `あなたのGeminiAPIキーをここに入れてください`の部分を、実際のAPIキーに置き換えてください。
-
-### 5. 拡張機能のビルド
-```bash
+# ビルド
 npm run build
+
+# Chrome拡張機能として読み込み
+# chrome://extensions/ で「パッケージ化されていない拡張機能を読み込む」
+# build/chrome-mv3-prod フォルダを選択
 ```
 
-### 6. Chromeへのインストール
-1. Chromeで`chrome://extensions/`にアクセス
-2. 「デベロッパーモード」を有効化
-3. 「パッケージ化されていない拡張機能を読み込む」をクリック
-4. `build/chrome-mv3-prod`フォルダを選択
+## 🛠️ 使用方法
 
-## 📖 使用方法
+### 初回設定
+1. 拡張機能のアイコンをクリック
+2. 「🔧 APIキー設定」をクリック
+3. Gemini APIキーを入力して保存
 
 ### 基本的な使い方
-1. **要約したいテキストを選択**
-2. **右クリックして「Geminiでテキストを要約する」をクリック**
-3. **ページ内に要約結果が表示されます**
+1. **テキスト選択**: 要約したいテキストをドラッグして選択
+2. **右クリック**: 選択したテキスト上で右クリック
+3. **要約実行**: 「Geminiでテキストを要約する」をクリック
+4. **結果確認**: ページ内に要約結果がポップアップ表示
 
-### 詳細な手順
-1. 任意のウェブページで要約したいテキストをドラッグして選択
-2. 選択したテキスト上で右クリック
-3. コンテキストメニューから「Geminiでテキストを要約する」を選択
-4. 要約処理が開始され、結果がページ内にポップアップ表示
-5. 結果を確認後、×ボタンでポップアップを閉じる
+## 💡 活用シーン
 
-## ⚙️ 設定
+### 📚 学習支援
+- **教科書・論文**: 長い文章の要点を素早く把握
+- **参考書**: 複雑な内容を簡潔に整理
+- **学習効率**: 理解度が格段に向上
 
-### 環境変数
-- `PLASMO_PUBLIC_GEMINI_API_KEY`: Gemini APIキー（必須）
+### 💼 業務効率化
+- **報告書**: 重要なポイントを素早く抽出
+- **マニュアル**: 手順の要点を明確化
+- **資料**: 大量情報の効率的な読解
+
+### 🔍 情報収集
+- **ニュース**: 記事の核心を素早く理解
+- **ブログ**: 長文の要点を把握
+- **調査**: 複数情報の比較・分析
+
+### 🧪 研究活動
+- **学術論文**: 研究内容の要点把握
+- **調査報告**: データの効率的な読解
+- **文献**: 関連研究の素早い理解
+
+## 🔧 技術仕様
+
+### 技術スタック
+- **フレームワーク**: [Plasmo](https://www.plasmo.com/) v0.90.5
+- **AI API**: Google Gemini 2.5 Flash
+- **言語**: TypeScript + React
+- **ビルド**: Manifest V3対応
 
 ### 権限
-- `contextMenus`: 右クリックメニューの作成
-- `activeTab`: アクティブなタブへのアクセス
-- `host_permissions`: 全サイトでの動作
+- **`contextMenus`**: 右クリックメニューの作成
+- **`activeTab`**: アクティブなタブへのアクセス
+- **`storage`**: APIキーのローカル保存
+- **`host_permissions`**: Gemini APIへの通信のみ
 
-## 🛠️ 開発
+### セキュリティ
+- **APIキー**: ローカルストレージに暗号化保存
+- **データ送信**: Gemini APIのみ（外部サーバーなし）
+- **プライバシー**: ユーザーデータの最小限収集
 
-### 開発サーバーの起動
-```bash
-npm run dev
-```
+## 📱 対応ブラウザ
 
-### ビルド
-```bash
-npm run build
-```
+- ✅ Google Chrome (推奨)
+- ✅ Microsoft Edge
+- ✅ Brave
+- ✅ その他のChromiumベースブラウザ
 
-### パッケージ化
-```bash
-npm run package
-```
+## 🔒 プライバシー
 
-## 🔧 カスタマイズ
+### データの取り扱い
+- **APIキー**: ローカルに保存（外部送信なし）
+- **選択テキスト**: Gemini APIのみに送信
+- **要約結果**: 一時表示のみ（保存なし）
+- **ログ**: デバッグ用のみ（個人情報なし）
 
-### モデルの変更
-Gemini AIのモデルを変更したい場合は、`background.ts`の79行目を編集してください：
+### プライバシーポリシー
+詳細は[プライバシーポリシー](privacy-policy.md)をご確認ください。
 
-```typescript
-78    const result = await ai.models.generateContent({
-79      model: "gemini-2.5-flash-lite",
-80      contents: [prompt]
-81    })
-```
-
-**利用可能モデル例**:
-- `gemini-2.5-flash-lite`: 高速・軽量（推奨）
-- `gemini-2.5-flash`: 高精度・多機能
-- `gemini-2.5-pro`: 最高性能・思考機能
-
-**詳細情報**:
- モデル変更の際は[Google AI Gemini モデル](https://ai.google.dev/gemini-api/docs/models?hl=ja)を参照してください。
- レート制限の詳細は[Google AI Gemini API レート制限](https://ai.google.dev/gemini-api/docs/rate-limits?hl=ja)をご確認ください。
-
-### プロンプトの変更
-要約の指示を変更したい場合は、`background.ts`の75行目を編集してください：
-
-```typescript
-const prompt = `以下のテキストを簡潔に要約してください。\n\n${text}`
-```
-
-**カスタマイズ例**:
-- 要約の長さを指定: `「3行で要約してください」`
-- 特定の観点で要約: `「技術的な観点で要約してください」`
-- 言語を指定: `「英語で要約してください」`
-
-**注意**: 変更後は必ず`npm run build`で再ビルドしてください。
-
-## ⚠️ 注意事項
-
-- **APIキーの管理**: `.env`ファイルはGitにコミットしないでください
-- **インターネット接続**: Gemini APIを使用するため、インターネット接続が必要です
-- **テキスト長**: 長いテキストは処理に時間がかかる場合があります
-- **API制限**: Gemini APIの利用制限にご注意ください
-
-## 🐛 トラブルシューティング
+## 🚨 トラブルシューティング
 
 ### よくある問題
 
-#### 1. 右クリックメニューが表示されない
+#### 右クリックメニューが表示されない
 - 拡張機能が有効化されているか確認
 - ページを再読み込みしてみてください
 
-#### 2. 要約が実行されない
-- `.env`ファイルにAPIキーが正しく設定されているか確認
+#### 要約が実行されない
+- APIキーが正しく設定されているか確認
 - Chrome拡張機能のコンソールでエラーログを確認
 
-#### 3. 結果が表示されない
-- **ページの再読み込み**を行ってください
-- **拡張機能のサービスワーカーのコンソールログ**を確認してください
-  - Chrome拡張機能の管理ページ（`chrome://extensions/`）で拡張機能を開く
-  - 「Service Worker」をクリックしてコンソールを確認
-  - エラーメッセージやログを確認
-- 拡張機能の権限設定を確認
+#### 結果が表示されない
+- ページの再読み込みを行ってください
+- 拡張機能のサービスワーカーのコンソールログを確認
 
 ### ログの確認方法
 1. `chrome://extensions/`で拡張機能の「詳細」をクリック
 2. 「Service Worker」の「ビューを検証」をクリック
 3. コンソールでログを確認
 
-## 📁 ファイル構成
-
-```
-ai-extension/
-├── background.ts          # バックグラウンド処理（要約・メッセージ送信）
-├── content.tsx           # 結果表示UI
-├── popup.tsx            # 説明・ヘルプ画面
-├── package.json         # 依存関係・設定
-├── .env                 # 環境変数（APIキー）
-└── README.md           # このファイル
-```
-
 ## 🤝 貢献
 
-バグ報告や機能要望は、GitHubのIssuesでお知らせください。
+### バグ報告・機能要望
+- [GitHub Issues](https://github.com/TeppuSan/ai-extension/issues)で報告
+- 詳細な再現手順を含めて報告してください
+
+### プルリクエスト
+1. このリポジトリをフォーク
+2. 機能ブランチを作成 (`git checkout -b feature/amazing-feature`)
+3. 変更をコミット (`git commit -m 'Add amazing feature'`)
+4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
+5. プルリクエストを作成
 
 ## 📄 ライセンス
 
-このプロジェクトはMITライセンスの下で公開されています。
+このプロジェクトはMITライセンスの下で公開されています。詳細は[LICENSE](LICENSE)ファイルをご確認ください。
 
-## 👨‍💻 作者
+## 👨‍💻 開発者
 
-Teppu
+**Teppu** - 個人開発者
+
+- **GitHub**: [@TeppuSan](https://github.com/TeppuSan)
+- **連絡先**: [starvampire.teppu@gmail.com](mailto:starvampire.teppu@gmail.com)
+
+## 🙏 謝辞
+
+- [Plasmo](https://www.plasmo.com/) - 素晴らしいChrome拡張機能フレームワーク
+- [Google Gemini](https://ai.google.dev/gemini-api/) - 高精度なAI要約技術
+- [Chrome Web Store](https://chrome.google.com/webstore/) - 拡張機能の配布プラットフォーム
+
+## 📈 今後の予定
+
+- [ ] 多言語対応の強化
+- [ ] 要約のカスタマイズ機能
+- [ ] 履歴機能の追加
+- [ ] モバイル対応
+- [ ] オフライン対応
+
+## ⚠️ 注意事項
+
+- **APIキーの管理**: 個人のAPIキーを適切に管理してください
+- **利用制限**: Gemini APIの利用制限にご注意ください
+- **プライバシー**: 機密情報の要約には十分ご注意ください
+- **サポート**: 個人開発のため、サポートに限りがあります
 
 ---
 
-**注意**: この拡張機能を使用する前に、必ず`.env`ファイルに有効なGemini APIキーを設定してください。
+**「サクッとAI要約」で、情報処理の新しいスタイルを体験してください！** 🚀
+
+[Chrome Web Storeでインストール](https://chrome.google.com/webstore/detail/sakutto-ai-summary) | [GitHub](https://github.com/TeppuSan/ai-extension) | [プライバシーポリシー](privacy-policy.md)
