@@ -1,5 +1,5 @@
 {
-  "name": "サクッとAI要約",
+  "name": "quick-ai-summary",
   "displayName": "サクッとAI要約",
   "version": "0.0.1",
   "description": "APIキーを入力することで、文章を選択し右クリックで簡単にAIが要約します。",
