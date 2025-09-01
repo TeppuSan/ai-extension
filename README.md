@@ -87,6 +87,48 @@ npm run build
 - **言語**: TypeScript + React
 - **ビルド**: Manifest V3対応
 
+### 利用可能モデル
+
+#### 現在使用モデル
+- **`gemini-2.5-flash-lite`** (推奨・デフォルト)
+  - **場所**: `consts.tsx` の 16行目
+  - **設定**: `API.MODEL: "gemini-2.5-flash-lite"`
+  - **特徴**: 高速・軽量・コスト効率が良い
+  - **用途**: 一般的な要約タスクに最適
+
+#### その他のモデル
+- **`gemini-2.5-flash`**: 高精度・多機能
+  - より高度な分析が可能
+  - 複雑な文脈理解
+  - より詳細な要約
+
+- **`gemini-2.5-pro`**: 最高性能・思考機能
+  - 最高レベルの精度
+  - 複雑な推論が可能
+  - 高度な分析タスク
+
+#### モデル変更方法（開発者向け）
+```typescript
+// consts.tsx の 16行目を編集
+API: {
+  MODEL: "gemini-2.5-flash", // または "gemini-2.5-pro"
+  // ... その他の設定
+}
+```
+
+#### 現在の仕様（v1.0.0）
+- **デフォルトモデル**: `gemini-2.5-flash-lite`
+- **要約プロンプト**: `consts.tsx` の 18行目
+- **テストプロンプト**: `consts.tsx` の 17行目
+- **プレビュー文字数**: `consts.tsx` の 35行目（100文字）
+- **タイムアウト**: 30秒（Gemini API標準）
+
+#### モデル変更について
+- **デフォルト**: `gemini-2.5-flash-lite`を使用
+- **カスタマイズ**: `consts.tsx`の`API.MODEL`を変更
+- **詳細情報**: [Google AI Gemini モデル](https://ai.google.dev/gemini-api/docs/models?hl=ja)を参照
+- **レート制限**: [Google AI Gemini API レート制限](https://ai.google.dev/gemini-api/docs/quotas?hl=ja)をご確認
+
 ### 権限
 - **`contextMenus`**: 右クリックメニューの作成
 - **`activeTab`**: アクティブなタブへのアクセス
