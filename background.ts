@@ -146,6 +146,7 @@ function truncateText(text: string): string {
 
 async function summarizeText(text: string, tab: chrome.tabs.Tab) {
   console.log("テキスト要約を開始します")
+  const startTimeMs = Date.now()
 
   // ローディング表示を送信
   await sendMessageToContent(tab, {
@@ -168,6 +169,10 @@ async function summarizeText(text: string, tab: chrome.tabs.Tab) {
     // content.tsxに送れなかった場合はポップアップで表示
     if (!errorSent) {
       showErrorInPopup(CONSTANTS.ERROR_MESSAGES.API_KEY_MISSING)
+    }
+    {
+      const elapsedMs = Date.now() - startTimeMs
+      console.log("要約処理: APIキー未設定で終了 所要時間:", elapsedMs, "ms")
     }
     return
   }
@@ -205,6 +210,10 @@ async function summarizeText(text: string, tab: chrome.tabs.Tab) {
       if (!errorSent) {
         showErrorInPopup(CONSTANTS.ERROR_MESSAGES.SUMMARY_EMPTY)
       }
+      {
+        const elapsedMs = Date.now() - startTimeMs
+        console.log("要約処理: 要約空で終了 所要時間:", elapsedMs, "ms")
+      }
       return
     }
 
@@ -218,6 +227,10 @@ async function summarizeText(text: string, tab: chrome.tabs.Tab) {
     // content.tsxに送れなかった場合はポップアップで表示
     if (!successSent) {
       showResultInPopup(summary, truncateText(text))
+    }
+    {
+      const elapsedMs = Date.now() - startTimeMs
+      console.log("要約処理: 正常完了 所要時間:", elapsedMs, "ms")
     }
   } catch (error) {
     console.error("Gemini APIでのエラーです:", error)
@@ -243,6 +256,10 @@ async function summarizeText(text: string, tab: chrome.tabs.Tab) {
     // content.tsxに送れなかった場合はポップアップで表示
     if (!errorSent) {
       showErrorInPopup(errorMessage)
+    }
+    {
+      const elapsedMs = Date.now() - startTimeMs
+      console.log("要約処理: エラーで終了 所要時間:", elapsedMs, "ms")
     }
   }
 }
