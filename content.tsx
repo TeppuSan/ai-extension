@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react"
 import { createRoot } from "react-dom/client"
 
+import { CONSTANTS } from "./consts"
+
 // エラー表示コンポーネント
 function ErrorDisplay({
   errorMessage,
@@ -115,6 +117,94 @@ function ErrorDisplay({
   )
 }
 
+// ローディング表示コンポーネント
+function LoadingDisplay({
+  originalText,
+  onClose
+}: {
+  originalText: string
+  onClose: () => void
+}) {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: "20px",
+        right: "20px",
+        width: "400px",
+        backgroundColor: "white",
+        border: "2px solid #ffa726",
+        borderRadius: "12px",
+        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.15)",
+        zIndex: 10000,
+        fontFamily: "Arial, sans-serif",
+        overflow: "hidden"
+      }}>
+      {/* ヘッダー */}
+      <div
+        style={{
+          backgroundColor: "#ffa726",
+          color: "white",
+          padding: "12px 16px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}>
+        <h3 style={{ margin: 0, fontSize: "16px" }}>⏳ 要約処理中...</h3>
+        <button
+          onClick={onClose}
+          style={{
+            background: "none",
+            border: "none",
+            color: "white",
+            fontSize: "20px",
+            cursor: "pointer",
+            padding: "0",
+            width: "24px",
+            height: "24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          }}>
+          ×
+        </button>
+      </div>
+
+      {/* 元のテキスト */}
+      <div style={{ padding: "12px 16px", borderBottom: "1px solid #eee" }}>
+        <div style={{ fontSize: "12px", color: "#666", marginBottom: "4px" }}>
+          元のテキスト:
+        </div>
+        <div style={{ fontSize: "14px", color: "#333" }}>{originalText}</div>
+      </div>
+
+      {/* ローディングメッセージ */}
+      <div style={{ padding: "16px", textAlign: "center" }}>
+        <div
+          style={{ fontSize: "16px", color: "#ffa726", marginBottom: "8px" }}>
+          🤖 Gemini AIが要約中...
+        </div>
+        <div style={{ fontSize: "14px", color: "#666" }}>
+          しばらくお待ちください
+        </div>
+      </div>
+
+      {/* フッター */}
+      <div
+        style={{
+          padding: "12px 16px",
+          borderTop: "1px solid #eee",
+          backgroundColor: "#fff3e0",
+          fontSize: "12px",
+          color: "#e65100",
+          textAlign: "center"
+        }}>
+        AI Extension - 処理中
+      </div>
+    </div>
+  )
+}
+
 // 要約結果表示コンポーネント
 function SummaryResult({
   summary,
@@ -210,29 +300,40 @@ function ContentScript() {
   } | null>(null)
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [loadingData, setLoadingData] = useState<{
+    originalText: string
+  } | null>(null)
 
   useEffect(() => {
-    // background.tsからのメッセージを受信
     const handleMessage = (message: any) => {
-      if (message.type === "SUMMARY_COMPLETE") {
+      console.log("メッセージを受信しました:", message)
+
+      if (message.type === CONSTANTS.MESSAGE_TYPES.SUMMARY_COMPLETE) {
         setSummaryData({
           summary: message.summary,
           originalText: message.originalText
         })
         setErrorMessage(null) // エラーメッセージをクリア
-      } else if (message.type === "API_KEY_MISSING") {
+        setLoadingData(null) // ローディングデータをクリア
+      } else if (message.type === CONSTANTS.MESSAGE_TYPES.API_KEY_MISSING) {
         setErrorMessage(message.message)
         setSummaryData(null) // 要約データをクリア
-      } else if (message.type === "SUMMARY_EMPTY") {
+        setLoadingData(null) // ローディングデータをクリア
+      } else if (message.type === CONSTANTS.MESSAGE_TYPES.SUMMARY_EMPTY) {
         setErrorMessage(message.message)
+        setSummaryData(null) // 要約データをクリア
+        setLoadingData(null) // ローディングデータをクリア
+      } else if (message.type === CONSTANTS.MESSAGE_TYPES.LOADING) {
+        setLoadingData({
+          originalText: message.originalText
+        })
+        setErrorMessage(null) // エラーメッセージをクリア
         setSummaryData(null) // 要約データをクリア
       }
     }
 
-    // メッセージリスナーを登録
     chrome.runtime.onMessage.addListener(handleMessage)
 
-    // クリーンアップ
     return () => {
       chrome.runtime.onMessage.removeListener(handleMessage)
     }
@@ -244,6 +345,16 @@ function ContentScript() {
       <ErrorDisplay
         errorMessage={errorMessage}
         onClose={() => setErrorMessage(null)}
+      />
+    )
+  }
+
+  // ローディング中の場合
+  if (loadingData) {
+    return (
+      <LoadingDisplay
+        originalText={loadingData.originalText}
+        onClose={() => setLoadingData(null)}
       />
     )
   }

@@ -1,6 +1,8 @@
 // background.ts (バックグラウンドでGemini APIと連携)
 import { GoogleGenAI } from "@google/genai"
 
+import { CONSTANTS } from "./consts"
+
 // コンテキストメニューに項目を追加します
 chrome.runtime.onInstalled.addListener(() => {
   console.log(
@@ -10,9 +12,9 @@ chrome.runtime.onInstalled.addListener(() => {
   try {
     chrome.contextMenus.create(
       {
-        id: "summarizeText",
-        title: "Geminiでテキストを要約する",
-        contexts: ["selection"]
+        id: CONSTANTS.CONTEXT_MENU.ID,
+        title: CONSTANTS.CONTEXT_MENU.TITLE,
+        contexts: CONSTANTS.CONTEXT_MENU.CONTEXTS
       },
       () => {
         if (chrome.runtime.lastError) {
@@ -35,10 +37,11 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   console.log("コンテキストメニューがクリックされました:", info.menuItemId)
   console.log("選択されたテキスト:", info.selectionText)
 
-  if (info.menuItemId === "summarizeText" && info.selectionText) {
+  if (info.menuItemId === CONSTANTS.CONTEXT_MENU.ID && info.selectionText) {
     console.log(
       "選択されたテキスト:",
-      info.selectionText.substring(0, 100) + "..."
+      info.selectionText.substring(0, CONSTANTS.TEXT.MAX_PREVIEW_LENGTH) +
+        CONSTANTS.TEXT.ELLIPSIS
     )
     await summarizeText(info.selectionText, tab)
   }
@@ -49,30 +52,122 @@ chrome.runtime.onStartup.addListener(() => {
   console.log("拡張機能が起動しました")
 })
 
-// メッセージ受信リスナー（デバッグ用）現在は実行されない
-// chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-//   console.log("メッセージを受信しました:", message)
-//   sendResponse({ status: "received" })
-// })
+// メッセージ受信リスナー
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log("メッセージを受信しました:", message)
+
+  if (message.type === CONSTANTS.MESSAGE_TYPES.TEST_API_KEY) {
+    // 非同期処理を別関数で実行
+    testApiKey().then(sendResponse)
+    return true // 非同期レスポンスを示す
+  }
+
+  // その他のメッセージ
+  sendResponse({ status: "received" })
+})
+
+// APIキーテスト関数
+async function testApiKey() {
+  try {
+    console.log("APIキーテストを開始します")
+    const { [CONSTANTS.STORAGE_KEYS.USER_API_KEY]: userApiKey } =
+      await chrome.storage.local.get([CONSTANTS.STORAGE_KEYS.USER_API_KEY])
+
+    if (!userApiKey) {
+      console.log("APIキーが設定されていません")
+      return { status: "API_KEY_MISSING" }
+    }
+
+    console.log("APIキーをテストします")
+    const ai = new GoogleGenAI({ apiKey: userApiKey })
+    const result = await ai.models.generateContent({
+      model: CONSTANTS.API.MODEL,
+      contents: [CONSTANTS.API.TEST_PROMPT]
+    })
+
+    console.log("APIキーが有効です")
+    return { status: "API_KEY_VALID" }
+  } catch (error) {
+    console.error("APIキーテストエラー:", error)
+    return { status: "API_KEY_INVALID" }
+  }
+}
+
+// content.tsxにメッセージ送信する関数（フォールバック付き）
+async function sendMessageToContent(tab: chrome.tabs.Tab, message: any) {
+  if (tab && tab.id) {
+    try {
+      await chrome.tabs.sendMessage(tab.id, message)
+      return true // 送信成功
+    } catch (error) {
+      console.log("content.tsxへのメッセージ送信に失敗しました:", error)
+      return false // 送信失敗
+    }
+  }
+  return false
+}
+
+// ポップアップで結果を表示する関数
+function showResultInPopup(summary: string, originalText: string) {
+  // ポップアップを開いて結果を表示
+  chrome.action.openPopup()
+
+  // 結果をストレージに保存（ポップアップで読み取り用）
+  chrome.storage.local.set({
+    [CONSTANTS.STORAGE_KEYS.POPUP_RESULT]: {
+      summary: summary,
+      originalText: originalText,
+      timestamp: Date.now()
+    }
+  })
+}
+
+// ポップアップでエラーを表示する関数
+function showErrorInPopup(errorMessage: string) {
+  // ポップアップを開いてエラーを表示
+  chrome.action.openPopup()
+
+  // エラーをストレージに保存（ポップアップで読み取り用）
+  chrome.storage.local.set({
+    [CONSTANTS.STORAGE_KEYS.POPUP_ERROR]: {
+      message: errorMessage,
+      timestamp: Date.now()
+    }
+  })
+}
+
+// テキストをプレビュー用に短縮する関数
+function truncateText(text: string): string {
+  return text.length > CONSTANTS.TEXT.MAX_PREVIEW_LENGTH
+    ? text.substring(0, CONSTANTS.TEXT.MAX_PREVIEW_LENGTH) +
+        CONSTANTS.TEXT.ELLIPSIS
+    : text
+}
 
 async function summarizeText(text: string, tab: chrome.tabs.Tab) {
   console.log("テキスト要約を開始します")
 
+  // ローディング表示を送信
+  await sendMessageToContent(tab, {
+    type: CONSTANTS.MESSAGE_TYPES.LOADING,
+    summary: "読み込み中...",
+    originalText: truncateText(text)
+  })
+
   // 保存済みのAPIキーを取得
-  const { userApiKey } = await chrome.storage.local.get(["userApiKey"])
+  const { [CONSTANTS.STORAGE_KEYS.USER_API_KEY]: userApiKey } =
+    await chrome.storage.local.get([CONSTANTS.STORAGE_KEYS.USER_API_KEY])
 
   if (!userApiKey) {
     // APIキーが設定されていない場合
-    if (tab && tab.id) {
-      try {
-        await chrome.tabs.sendMessage(tab.id, {
-          type: "API_KEY_MISSING",
-          message:
-            "APIキーが設定されていません。拡張機能の設定でAPIキーを入力してください。"
-        })
-      } catch (error) {
-        console.log("content.tsxへのメッセージ送信に失敗しました")
-      }
+    const errorSent = await sendMessageToContent(tab, {
+      type: CONSTANTS.MESSAGE_TYPES.API_KEY_MISSING,
+      message: CONSTANTS.ERROR_MESSAGES.API_KEY_MISSING
+    })
+
+    // content.tsxに送れなかった場合はポップアップで表示
+    if (!errorSent) {
+      showErrorInPopup(CONSTANTS.ERROR_MESSAGES.API_KEY_MISSING)
     }
     return
   }
@@ -85,10 +180,10 @@ async function summarizeText(text: string, tab: chrome.tabs.Tab) {
   try {
     console.log("Gemini APIにリクエストを送信中...")
 
-    const prompt = `以下のテキストを簡潔に要約してください。\n\n${text}`
+    const prompt = CONSTANTS.API.SUMMARIZE_PROMPT + text
 
     const result = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
+      model: CONSTANTS.API.MODEL,
       contents: [prompt]
     })
     const summary = result.text
@@ -101,68 +196,53 @@ async function summarizeText(text: string, tab: chrome.tabs.Tab) {
     // 要約結果の検証
     if (!summary || summary.trim() === "") {
       // 要約結果が空の場合
-      if (tab && tab.id) {
-        try {
-          await chrome.tabs.sendMessage(tab.id, {
-            type: "SUMMARY_EMPTY",
-            message:
-              "要約結果が取得できませんでした。テキストの内容を確認してください。"
-          })
-        } catch (error) {
-          console.log("content.tsxへのメッセージ送信に失敗しました")
-        }
+      const errorSent = await sendMessageToContent(tab, {
+        type: CONSTANTS.MESSAGE_TYPES.SUMMARY_EMPTY,
+        message: CONSTANTS.ERROR_MESSAGES.SUMMARY_EMPTY
+      })
+
+      // content.tsxに送れなかった場合はポップアップで表示
+      if (!errorSent) {
+        showErrorInPopup(CONSTANTS.ERROR_MESSAGES.SUMMARY_EMPTY)
       }
       return
     }
 
     // content.tsxに要約結果を送信
-    if (tab && tab.id) {
-      try {
-        await chrome.tabs.sendMessage(tab.id, {
-          type: "SUMMARY_COMPLETE",
-          summary: summary,
-          originalText:
-            // 100文字を超えた場合は...で省略
-            text.substring(0, 100) + (text.length > 100 ? "..." : "")
-        })
-        console.log("content.tsxに要約結果を送信しました")
-      } catch (error) {
-        console.log(
-          "content.tsxが読み込まれていないか、メッセージ送信に失敗しました"
-        )
-      }
+    const successSent = await sendMessageToContent(tab, {
+      type: CONSTANTS.MESSAGE_TYPES.SUMMARY_COMPLETE,
+      summary: summary,
+      originalText: truncateText(text)
+    })
+
+    // content.tsxに送れなかった場合はポップアップで表示
+    if (!successSent) {
+      showResultInPopup(summary, truncateText(text))
     }
   } catch (error) {
     console.error("Gemini APIでのエラーです:", error)
 
     // APIキーが間違っている場合のエラーハンドリング
-    let errorMessage = "Gemini APIでエラーが発生しました。"
-    let messageType = "SUMMARY_EMPTY"
+    let errorMessage = CONSTANTS.ERROR_MESSAGES.API_ERROR
+    let messageType = CONSTANTS.MESSAGE_TYPES.SUMMARY_EMPTY
 
     if (error.message && error.message.includes("API_KEY_INVALID")) {
-      errorMessage = "APIキーが無効です。正しいAPIキーを設定してください。"
-      messageType = "SUMMARY_EMPTY"
+      errorMessage = CONSTANTS.ERROR_MESSAGES.API_KEY_INVALID
     } else if (error.message && error.message.includes("quota")) {
-      errorMessage =
-        "APIの利用制限に達しました。しばらく時間をおいてから再試行してください。"
-      messageType = "SUMMARY_EMPTY"
+      errorMessage = CONSTANTS.ERROR_MESSAGES.QUOTA_ERROR
     } else if (error.message && error.message.includes("network")) {
-      errorMessage =
-        "ネットワークエラーが発生しました。インターネット接続を確認してください。"
-      messageType = "SUMMARY_EMPTY"
+      errorMessage = CONSTANTS.ERROR_MESSAGES.NETWORK_ERROR
     }
 
     // content.tsxにエラーメッセージを送信
-    if (tab && tab.id) {
-      try {
-        await chrome.tabs.sendMessage(tab.id, {
-          type: messageType,
-          message: errorMessage
-        })
-        console.log("content.tsxにエラーメッセージを送信しました")
-      } catch (sendError) {
-        console.log("content.tsxへのエラーメッセージ送信に失敗しました")
-      }
+    const errorSent = await sendMessageToContent(tab, {
+      type: messageType,
+      message: errorMessage
+    })
+
+    // content.tsxに送れなかった場合はポップアップで表示
+    if (!errorSent) {
+      showErrorInPopup(errorMessage)
     }
   }
 }
