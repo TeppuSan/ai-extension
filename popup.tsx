@@ -1,18 +1,68 @@
+/**
+ * popup.tsx - 拡張機能ポップアップUI
+ *
+ * このファイルは、Chrome拡張機能のポップアップ画面を管理する
+ * Reactコンポーネントです。ユーザーの設定とフォールバック表示を担当します。
+ *
+ * 主な機能：
+ * - APIキーの設定と保存
+ * - APIキーのテスト機能
+ * - フォールバック結果の表示
+ * - エラーメッセージの表示
+ * - 設定画面の表示切り替え
+ */
+
 import { useEffect, useState } from "react"
 
 import { CONSTANTS } from "./consts"
 
+/**
+ * メインポップアップコンポーネント
+ *
+ * 拡張機能のポップアップ画面全体を管理するコンポーネント
+ * ユーザーの設定操作とフォールバック表示を統合的に処理
+ *
+ * 状態管理：
+ * - apiKey: ユーザーが入力したAPIキー
+ * - isSaved: APIキーの保存状態
+ * - showSettings: 設定画面の表示状態
+ * - testResult: APIキーテストの結果
+ * - popupResult: フォールバック表示用の要約結果
+ * - popupError: フォールバック表示用のエラーメッセージ
+ */
 function IndexPopup() {
-  const [apiKey, setApiKey] = useState("") //初期常態は空文字
-  const [isSaved, setIsSaved] = useState(false) //初期常態はfalse
-  const [showSettings, setShowSettings] = useState(false) //初期常態はfalse
-  const [testResult, setTestResult] = useState<string | null>(null) //初期常態はnull
+  // APIキーの状態管理（初期状態は空文字）
+  const [apiKey, setApiKey] = useState("")
+
+  // APIキーの保存状態管理（初期状態はfalse）
+  const [isSaved, setIsSaved] = useState(false)
+
+  // 設定画面の表示状態管理（初期状態はfalse）
+  const [showSettings, setShowSettings] = useState(false)
+
+  // APIキーテスト結果の状態管理（初期状態はnull）
+  const [testResult, setTestResult] = useState<string | null>(null)
+
+  // フォールバック表示用の要約結果状態管理
   const [popupResult, setPopupResult] = useState<{
     summary: string
     originalText: string
   } | null>(null)
+
+  // フォールバック表示用のエラーメッセージ状態管理
   const [popupError, setPopupError] = useState<string | null>(null)
 
+  /**
+   * コンポーネント初期化時のuseEffect
+   *
+   * ポップアップが開かれた際に、保存済みの設定とフォールバックデータを読み込む
+   *
+   * 処理内容：
+   * 1. 保存済みのAPIキーをローカルストレージから読み込み
+   * 2. フォールバック表示用の要約結果をチェック
+   * 3. フォールバック表示用のエラーメッセージをチェック
+   * 4. 表示後は一時データをストレージから削除
+   */
   useEffect(() => {
     // 保存済みのAPIキーを読み込み
     chrome.storage.local.get(
@@ -25,46 +75,97 @@ function IndexPopup() {
     )
 
     // フォールバック結果をチェック
+    // content.tsx にメッセージ送信が失敗した場合の代替表示用データ
     chrome.storage.local.get(
       [CONSTANTS.STORAGE_KEYS.POPUP_RESULT, CONSTANTS.STORAGE_KEYS.POPUP_ERROR],
       (result) => {
+        // 要約結果のフォールバック表示
         if (result[CONSTANTS.STORAGE_KEYS.POPUP_RESULT]) {
           setPopupResult(result[CONSTANTS.STORAGE_KEYS.POPUP_RESULT])
-          // 表示後はストレージから削除
+          // 表示後はストレージから削除（一時データのため）
           chrome.storage.local.remove([CONSTANTS.STORAGE_KEYS.POPUP_RESULT])
         }
+
+        // エラーメッセージのフォールバック表示
         if (result[CONSTANTS.STORAGE_KEYS.POPUP_ERROR]) {
           setPopupError(result[CONSTANTS.STORAGE_KEYS.POPUP_ERROR].message)
-          // 表示後はストレージから削除
+          // 表示後はストレージから削除（一時データのため）
           chrome.storage.local.remove([CONSTANTS.STORAGE_KEYS.POPUP_ERROR])
         }
       }
     )
   }, [])
 
+  /**
+   * ポップアップ表示のuseEffect
+   *
+   * コンポーネントがマウントされた際にポップアップを開く
+   * 注意：この処理は実際には不要な場合が多い（Chromeが自動で開くため）
+   */
   useEffect(() => {
     chrome.action.openPopup()
   }, [])
 
+  /**
+   * APIキーを保存する関数
+   *
+   * ユーザーが入力したAPIキーをローカルストレージに保存し、
+   * 保存完了のフィードバックを表示する
+   *
+   * 処理内容：
+   * 1. 入力されたAPIキーをローカルストレージに保存
+   * 2. 保存完了状態を一時的に表示（2秒間）
+   * 3. 2秒後に保存完了状態をリセット
+   *
+   * 注意点：
+   * - APIキーは機密情報のため、ローカルストレージにのみ保存
+   * - 外部サーバーには送信されない
+   */
   const saveApiKey = () => {
     chrome.storage.local.set(
       { [CONSTANTS.STORAGE_KEYS.USER_API_KEY]: apiKey },
       () => {
         setIsSaved(true)
 
+        // 2秒後に保存完了状態をリセット
         setTimeout(() => setIsSaved(false), 2000)
       }
     )
   }
 
+  /**
+   * APIキーの有効性をテストする関数
+   *
+   * background.ts にAPIキーテスト要求を送信し、
+   * 結果に応じてユーザーにフィードバックを提供する
+   *
+   * 処理内容：
+   * 1. background.ts にAPIキーテスト要求を送信
+   * 2. レスポンスのステータスに応じて結果を判定
+   * 3. テスト結果を3秒間表示
+   * 4. エラーが発生した場合はエラー状態を表示
+   *
+   * テスト結果：
+   * - "success": APIキーが有効
+   * - "invalid": APIキーが無効
+   * - "missing": APIキーが設定されていない
+   * - "error": テスト実行中にエラーが発生
+   *
+   * 注意点：
+   * - 非同期処理のため await で待機
+   * - テスト結果は3秒後に自動的にクリア
+   * - エラーが発生した場合も適切にハンドリング
+   */
   const testApiKey = async () => {
     try {
+      // background.ts にAPIキーテスト要求を送信
       const response = await chrome.runtime.sendMessage({
-        type: CONSTANTS.MESSAGE_TYPES.TEST_API_KEY
+        type: CONSTANTS.INTERNAL_MESSAGES.TEST_API_KEY
       })
       console.log("APIキーのテスト結果:", response)
       const resStatus = response.status
 
+      // レスポンスステータスに応じて結果を判定
       if (resStatus === "API_KEY_VALID") {
         setTestResult("success")
       } else if (resStatus === "API_KEY_INVALID") {
@@ -73,10 +174,12 @@ function IndexPopup() {
         setTestResult("missing")
       }
 
+      // 3秒後にテスト結果をクリア
       setTimeout(() => setTestResult(null), 3000)
     } catch (error) {
       console.error("APIキーテストエラー:", error)
       setTestResult("error")
+      // エラー時も3秒後に結果をクリア
       setTimeout(() => setTestResult(null), 3000)
     }
   }

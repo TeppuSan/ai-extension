@@ -1,10 +1,42 @@
-// content.tsx (ページ内で要約結果を表示します)
+/**
+ * content.tsx - ページ内UI表示コンポーネント
+ *
+ * このファイルは、Webページ内に要約結果やエラーメッセージを表示する
+ * Chrome拡張機能のコンテンツスクリプトです。
+ *
+ * 主な機能：
+ * - background.ts からのメッセージ受信
+ * - 要約結果のページ内表示
+ * - エラーメッセージの表示
+ * - ローディング状態の表示
+ * - ユーザーインタラクションの処理
+ */
+
 import { useEffect, useState } from "react"
 import { createRoot } from "react-dom/client"
 
 import { CONSTANTS } from "./consts"
 
-// エラー表示コンポーネント
+/**
+ * エラー表示コンポーネント
+ *
+ * APIキー未設定や要約失敗などのエラーをユーザーに表示するコンポーネント
+ * エラーの内容と解決方法を分かりやすく提示する
+ *
+ * @param errorMessage - 表示するエラーメッセージ
+ * @param onClose - エラー表示を閉じる際のコールバック関数
+ *
+ * 表示内容：
+ * - エラーの種類（APIキーエラーなど）
+ * - エラーメッセージ
+ * - 解決方法の手順
+ * - 閉じるボタン
+ *
+ * スタイル：
+ * - 赤色のテーマでエラーであることを強調
+ * - 固定位置でページの右上に表示
+ * - 高いz-indexで他の要素の上に表示
+ */
 function ErrorDisplay({
   errorMessage,
   onClose
@@ -117,7 +149,26 @@ function ErrorDisplay({
   )
 }
 
-// ローディング表示コンポーネント
+/**
+ * ローディング表示コンポーネント
+ *
+ * 要約処理中であることをユーザーに視覚的に伝えるコンポーネント
+ * 処理が進行中であることを示し、ユーザーの待機を促す
+ *
+ * @param originalText - 要約対象の元テキスト（プレビュー用）
+ * @param onClose - ローディング表示を閉じる際のコールバック関数
+ *
+ * 表示内容：
+ * - 処理中であることを示すメッセージ
+ * - 元のテキストのプレビュー
+ * - アニメーション効果（視覚的なフィードバック）
+ * - 閉じるボタン
+ *
+ * スタイル：
+ * - オレンジ色のテーマで処理中であることを表現
+ * - 固定位置でページの右上に表示
+ * - 高いz-indexで他の要素の上に表示
+ */
 function LoadingDisplay({
   originalText,
   onClose
@@ -205,7 +256,28 @@ function LoadingDisplay({
   )
 }
 
-// 要約結果表示コンポーネント
+/**
+ * 要約結果表示コンポーネント
+ *
+ * Gemini AI によって生成された要約結果をユーザーに表示するコンポーネント
+ * 要約されたテキストと元のテキストを分かりやすく表示する
+ *
+ * @param summary - 要約されたテキスト
+ * @param originalText - 元のテキスト（プレビュー用）
+ * @param onClose - 要約結果表示を閉じる際のコールバック関数
+ *
+ * 表示内容：
+ * - 要約されたテキスト（メインコンテンツ）
+ * - 元のテキストのプレビュー
+ * - コピーボタン（要約結果をクリップボードにコピー）
+ * - 閉じるボタン
+ *
+ * スタイル：
+ * - 緑色のテーマで成功・完了を表現
+ * - 固定位置でページの右上に表示
+ * - 高いz-indexで他の要素の上に表示
+ * - スクロール可能なコンテンツエリア
+ */
 function SummaryResult({
   summary,
   originalText,
@@ -293,37 +365,86 @@ function SummaryResult({
 }
 
 // メインのcontent script
+/**
+ * メインコンテンツスクリプトコンポーネント
+ *
+ * このコンポーネントは、background.ts からのメッセージを受信し、
+ * 適切なUIコンポーネントを表示するメインロジックを管理します。
+ *
+ * 状態管理：
+ * - summaryData: 要約結果のデータ
+ * - errorMessage: エラーメッセージ
+ * - loadingData: ローディング状態のデータ
+ *
+ * 処理フロー：
+ * 1. background.ts からのメッセージを受信
+ * 2. メッセージタイプに応じて状態を更新
+ * 3. 状態に基づいて適切なUIコンポーネントを表示
+ *
+ * 表示優先順位：
+ * 1. エラーメッセージ（最優先）
+ * 2. ローディング表示
+ * 3. 要約結果表示
+ * 4. 何も表示しない（初期状態）
+ */
 function ContentScript() {
+  // 要約結果の状態管理
   const [summaryData, setSummaryData] = useState<{
     summary: string
     originalText: string
   } | null>(null)
 
+  // エラーメッセージの状態管理
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  // ローディング状態の状態管理
   const [loadingData, setLoadingData] = useState<{
     originalText: string
   } | null>(null)
 
+  /**
+   * background.ts からのメッセージを受信するためのuseEffect
+   *
+   * メッセージタイプに応じて適切な状態を更新し、UIを制御する
+   * 各メッセージタイプに対応した処理を実行
+   */
   useEffect(() => {
+    /**
+     * メッセージハンドラー関数
+     *
+     * @param message - background.ts から受信したメッセージオブジェクト
+     *
+     * 処理内容：
+     * - メッセージタイプを判定
+     * - 対応する状態を更新
+     * - 他の状態をクリア（表示の重複を防ぐ）
+     */
     const handleMessage = (message: any) => {
       console.log("メッセージを受信しました:", message)
 
-      if (message.type === CONSTANTS.MESSAGE_TYPES.SUMMARY_COMPLETE) {
+      // 要約完了メッセージの処理
+      if (message.type === "SUMMARY_COMPLETE") {
         setSummaryData({
           summary: message.summary,
           originalText: message.originalText
         })
         setErrorMessage(null) // エラーメッセージをクリア
         setLoadingData(null) // ローディングデータをクリア
-      } else if (message.type === CONSTANTS.MESSAGE_TYPES.API_KEY_MISSING) {
+      }
+      // APIキー未設定エラーメッセージの処理
+      else if (message.type === "API_KEY_MISSING") {
         setErrorMessage(message.message)
         setSummaryData(null) // 要約データをクリア
         setLoadingData(null) // ローディングデータをクリア
-      } else if (message.type === CONSTANTS.MESSAGE_TYPES.SUMMARY_EMPTY) {
+      }
+      // 要約結果が空のエラーメッセージの処理
+      else if (message.type === "SUMMARY_EMPTY") {
         setErrorMessage(message.message)
         setSummaryData(null) // 要約データをクリア
         setLoadingData(null) // ローディングデータをクリア
-      } else if (message.type === CONSTANTS.MESSAGE_TYPES.LOADING) {
+      }
+      // ローディング表示メッセージの処理
+      else if (message.type === "loading") {
         setLoadingData({
           originalText: message.originalText
         })
@@ -332,12 +453,24 @@ function ContentScript() {
       }
     }
 
+    // Chrome拡張機能のメッセージリスナーを登録
     chrome.runtime.onMessage.addListener(handleMessage)
 
+    // クリーンアップ関数：コンポーネントのアンマウント時にリスナーを削除
     return () => {
       chrome.runtime.onMessage.removeListener(handleMessage)
     }
   }, [])
+
+  /**
+   * 条件付きレンダリング：表示優先順位に基づいてUIを決定
+   *
+   * 優先順位：
+   * 1. エラーメッセージ（最優先）
+   * 2. ローディング表示
+   * 3. 要約結果表示
+   * 4. 何も表示しない（初期状態）
+   */
 
   // エラーメッセージがある場合はエラー表示を優先
   if (errorMessage) {
@@ -362,6 +495,7 @@ function ContentScript() {
   // 要約データがない場合は何も表示しない
   if (!summaryData) return null
 
+  // 要約結果を表示
   return (
     <SummaryResult
       summary={summaryData.summary}
@@ -371,16 +505,35 @@ function ContentScript() {
   )
 }
 
-// DOMにマウント
+/**
+ * コンテンツスクリプトの初期化関数
+ *
+ * この関数は、WebページにReactコンポーネントをマウントし、
+ * Chrome拡張機能のUIを表示可能にする初期化処理を行います。
+ *
+ * 処理内容：
+ * 1. 既存のコンテナがあれば削除（重複マウントを防ぐ）
+ * 2. 新しいコンテナ要素を作成
+ * 3. ページのbodyにコンテナを追加
+ * 4. ReactのcreateRootでコンポーネントをマウント
+ *
+ * 注意点：
+ * - ページの読み込み完了後に実行される必要がある
+ * - 既存のコンテナを削除することで重複表示を防ぐ
+ * - コンテナのIDは一意である必要がある
+ */
 function initializeContentScript() {
-  // 既存のコンテナがあれば削除
+  // 既存のコンテナがあれば削除（重複マウントを防ぐ）
   const existingContainer = document.getElementById("ai-extension-content")
   if (existingContainer) {
     existingContainer.remove()
   }
 
+  // 新しいコンテナ要素を作成
   const container = document.createElement("div")
   container.id = "ai-extension-content"
+
+  // ページのbodyにコンテナを追加
   document.body.appendChild(container)
 
   // React 18の正しい構文でルートを作成
@@ -388,9 +541,24 @@ function initializeContentScript() {
   root.render(<ContentScript />)
 }
 
-// DOMの準備が完了してから初期化
+/**
+ * DOMの準備状態に応じた初期化処理
+ *
+ * ページの読み込み状態を確認し、適切なタイミングでコンテンツスクリプトを初期化
+ *
+ * 処理内容：
+ * - ページがまだ読み込み中の場合は、DOMContentLoadedイベントを待つ
+ * - ページの読み込みが完了している場合は、即座に初期化を実行
+ *
+ * 注意点：
+ * - DOMContentLoadedイベントは、HTMLの解析が完了した時点で発火
+ * - 画像やスタイルシートの読み込み完了は待たない
+ * - これにより、早期にUIを表示可能にする
+ */
 if (document.readyState === "loading") {
+  // ページがまだ読み込み中の場合は、DOMContentLoadedイベントを待つ
   document.addEventListener("DOMContentLoaded", initializeContentScript)
 } else {
+  // ページの読み込みが完了している場合は、即座に初期化を実行
   initializeContentScript()
 }
